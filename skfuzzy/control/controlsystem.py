@@ -13,6 +13,7 @@ from .fuzzyvariable import FuzzyVariable
 from .rule import Rule
 from .term import Term, TermAggregate, WeightedTerm
 from .visualization import ControlSystemVisualizer
+from ..membership import Polynomial
 from ..defuzzify import (
     EmptyMembershipError as DefuzzEmptyMembershipError, defuzz,
 )
@@ -594,31 +595,69 @@ class CrispValueCalculator(object):
         self.sim = sim
 
     def defuzz(self):
-        """Derive crisp value based on membership of term(s)."""
-        if not self.sim._array_inputs:
-            ups_universe, output_mf, term_mfs = self.find_memberships()
 
-            if len(term_mfs) == 0:
-                raise NoTermMembershipsError(self.var)
+        """
+        If the consequent is TSK-type, then compute its value using sim.antecedent values.
+        Otherwise, we derive crisp value based on membership of adjective(s).
+         The difference between Mamdani and TSK Terms is the mf attribute, being a np.array or a list in the case of
+        Mamdani and a Polynomial in the case of TSK systems.
+        If it is a Mamdani system, we aggregate the output fuzzy sets and defuzzify it.
+        If it is a TSK system, we evaluate each polynomial and compute an averaged mean by the cut level.
+        """
+        tskTerms = sum([1 if isinstance(term.mf, Polynomial) else 0 for _, term in self.var.terms.items()])
+        assert tskTerms == 0 or tskTerms == len(self.var.terms)
+        if tskTerms == 0:
+            """Derive crisp value based on membership of adjective(s)."""
+            if not self.sim._array_inputs:
+                ups_universe, output_mf, cut_mfs = self.find_memberships()
+                if len(cut_mfs) == 0:
+                    raise ValueError("No terms have memberships.  Make sure you "
+                                     "have at least one rule connected to this "
+                                     "variable and have run the rules calculation.")
 
-            try:
-                return defuzz(ups_universe, output_mf,
-                              self.var.defuzzify_method)
-            except DefuzzEmptyMembershipError:
-                raise EmptyMembershipError(self.var)
+                try:
+                    return defuzz(ups_universe, output_mf,
+                                  self.var.defuzzify_method)
+                except AssertionError:
+                    raise ValueError("Crisp output cannot be calculated, likely "
+                                     "because the system is too sparse. Check to "
+                                     "make sure this set of input values will "
+                                     "activate at least one connected Term in each "
+                                     "Antecedent via the current set of Rules.")
+            else:
+                # Calculate using array-aware version, one cut at a time.
+                output = np.zeros(self.sim._array_shape, dtype=np.float64)
+
+                it = np.nditer(output, ['multi_index'], [['writeonly', 'allocate']])
+
+                for out in it:
+                    universe, mf = self.find_memberships_nd(it.multi_index)
+                    out[...] = defuzz(universe, mf, self.var.defuzzify_method)
+
+                return output
         else:
-            # Calculate using array-aware version, one cut at a time.
-            output = np.zeros(self.sim._array_shape, dtype=np.float64)
-
-            it = np.nditer(output,
-                           ['multi_index'],
-                           [['writeonly', 'allocate']])
-
-            for out in it:
-                universe, mf = self.find_memberships_nd(it.multi_index)
-                out[...] = defuzz(universe, mf, self.var.defuzzify_method)
-
-            return output
+            globalOutput = 0
+        globalWeight = 0
+        for _, term in self.var.terms.items():
+            cut = term.membership_value[self.sim]
+            if (cut > 0):
+                output = term.mf.evaluate(self.sim._get_inputs())
+                globalOutput += output * cut
+                globalWeight += cut
+        if globalWeight > 0:
+            [min, max] = self.var.universe
+            pred = globalOutput / globalWeight
+            if pred < min:
+                pred = min
+            if pred > max:
+                pred = max
+            return pred
+        else:
+            raise ValueError("Crisp output cannot be calculated, likely "
+                             "because the system is too sparse. Check to "
+                             "make sure this set of input values will "
+                             "activate at least one connected Term in each "
+                             "Antecedent via the current set of Rules.")
 
     def fuzz(self, value):
         """

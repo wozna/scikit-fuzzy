@@ -80,7 +80,7 @@ def gaussmf(x, mean, sigma):
     y : 1d array
         Gaussian membership function for x.
     """
-    return np.exp(-((x - mean)**2.) / (2 * sigma**2.))
+    return np.exp(-((x - mean) ** 2.) / (2 * sigma ** 2.))
 
 
 def gauss2mf(x, mean1, sigma1, mean2, sigma2):
@@ -429,7 +429,7 @@ def trimf(x, abc):
         Triangular membership function.
     """
     assert len(abc) == 3, 'abc parameter must have exactly three elements.'
-    a, b, c = np.r_[abc]     # Zero-indexing in Python
+    a, b, c = np.r_[abc]  # Zero-indexing in Python
     assert a <= b and b <= c, 'abc requires the three elements a <= b <= c.'
 
     y = np.zeros(len(x))
@@ -485,3 +485,37 @@ def zmf(x, a, b):
     y[idx] = 0
 
     return y
+
+
+class Polynomial:
+
+    @staticmethod
+    def term(coef, exp):
+        return (coef, exp)
+
+    def __init__(self, domain, expression):
+        # domain is used to limit the possible values for the inference for this individual consequent
+        # (not as a global prediction, this is done in controlsystem, function defuzz).
+        # Therefore,, the domain must contain only 2 values, the minimum and the maximum.
+
+        # The expression should be a dictionary where the keys are the variable names or '' for the
+        # independent term. The values are a list of 2-length tuples (coefficient,exponen) or in the case
+        # of the independent term a single number.
+
+        self.domain = domain
+        self.expression = expression
+
+    def evaluate(self, inputs):
+        # First the independent term
+        output = 0 if '' not in self.expression else self.expression['']
+        for name, value in inputs.items():
+            # It is possible to use a subset of the input variables
+            if name in self.expression:
+                for (coef, exp) in self.expression[name]:
+                    output += coef * value ** exp
+
+        if output > self.domain[1]:
+            output = self.domain[1]
+        if output < self.domain[0]:
+            output = self.domain[0]
+        return output
