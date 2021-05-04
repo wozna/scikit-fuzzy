@@ -61,7 +61,7 @@ from skfuzzy import control as ctrl
 # functions
 quality = ctrl.Antecedent(np.arange(0, 11, 1), 'quality')
 service = ctrl.Antecedent(np.arange(0, 11, 1), 'service')
-tip = ctrl.Consequent(np.arange(0, 26, 1), 'tip')
+tip = ctrl.Consequent(np.arange(120, 200, 1), 'wzrost')
 
 # Auto-membership function population is possible with .automf(3, 5, or 7)
 quality.automf(3)
@@ -69,9 +69,9 @@ service.automf(3)
 
 # Custom membership functions can be built interactively with a familiar,
 # Pythonic API
-tip['low'] = fuzz.trimf(tip.universe, [0, 0, 13])
-tip['medium'] = fuzz.trimf(tip.universe, [0, 13, 25])
-tip['high'] = fuzz.trimf(tip.universe, [13, 25, 25])
+tip['niski'] = fuzz.trapmf(tip.universe, [120, 120, 150, 160])
+tip['średni'] = fuzz.trimf(tip.universe, [155, 165, 175])
+tip['wysoki'] = fuzz.trapmf(tip.universe, [170, 180, 200, 200])
 
 """
 To help understand what the membership looks like, use the ``view`` methods.

@@ -572,6 +572,12 @@ class ControlSystemSimulation(object):
                                                  term.membership_value[self]))
             print("")
 
+    def get_mamdani_result(self, value):
+        result = CrispValueCalculator(self.ctrl.consequents[0], self).fuzz_consequent(value)
+        if result is None:
+            print("Can't get good label")
+        return result
+
 
 class CrispValueCalculator(object):
     """
@@ -637,27 +643,27 @@ class CrispValueCalculator(object):
                 return output
         else:
             globalOutput = 0
-        globalWeight = 0
-        for _, term in self.var.terms.items():
-            cut = term.membership_value[self.sim]
-            if (cut > 0):
-                output = term.mf.evaluate(self.sim._get_inputs())
-                globalOutput += output * cut
-                globalWeight += cut
-        if globalWeight > 0:
-            [min, max] = self.var.universe
-            pred = globalOutput / globalWeight
-            if pred < min:
-                pred = min
-            if pred > max:
-                pred = max
-            return pred
-        else:
-            raise ValueError("Crisp output cannot be calculated, likely "
-                             "because the system is too sparse. Check to "
-                             "make sure this set of input values will "
-                             "activate at least one connected Term in each "
-                             "Antecedent via the current set of Rules.")
+            globalWeight = 0
+            for _, term in self.var.terms.items():
+                cut = term.membership_value[self.sim]
+                if (cut > 0):
+                    output = term.mf.evaluate(self.sim._get_inputs())
+                    globalOutput += output * cut
+                    globalWeight += cut
+            if globalWeight > 0:
+                [min, max] = self.var.universe
+                pred = globalOutput / globalWeight
+                if pred < min:
+                    pred = min
+                if pred > max:
+                    pred = max
+                return pred
+            else:
+                raise ValueError("Crisp output cannot be calculated, likely "
+                                 "because the system is too sparse. Check to "
+                                 "make sure this set of input values will "
+                                 "activate at least one connected Term in each "
+                                 "Antecedent via the current set of Rules.")
 
     def fuzz(self, value):
         """
@@ -678,6 +684,25 @@ class CrispValueCalculator(object):
             for label, term in self.var.terms.items():
                 term.membership_value[self.sim] = \
                     interp_membership(self.var.universe, term.mf, value)
+
+    def fuzz_consequent(self, value):
+        """
+        Propagate crisp value down to adjectives by calculating membership.
+
+        This function accepts a crisp value and returns a term label.
+        """
+        if len(self.var.terms) == 0:
+            raise ValueError("No terms and membership functions were yet "
+                             "specified for the fuzzy variable '{}'."
+                             .format(self.var.label))
+        max = 0.0
+        max_label = None
+
+        for label, term in self.var.terms.items():
+            if max < term.membership_value[self.sim]:
+                max = term.membership_value[self.sim]
+                max_label = label
+        return max_label
 
     def find_memberships(self):
         """

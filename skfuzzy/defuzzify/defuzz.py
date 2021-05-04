@@ -37,6 +37,43 @@ def arglcut(ms, lambdacut):
     return np.nonzero(lambdacut <= ms)
 
 
+def wam(x, mfx):
+    """
+    Defuzzification using Weighted Average Method  method.
+
+    Parameters
+    ----------
+    x : 1d array, length M
+        Independent variable
+    mfx : 1d array, length M
+        Fuzzy membership function
+
+    Returns
+    -------
+    u : 1d array, length M
+        Defuzzified result
+
+    See also
+    --------
+    skfuzzy.defuzzify.defuzz, skfuzzy.defuzzify.dcentroid
+    """
+
+    '''
+    As we suppose linearity between each pair of points of x, we can calculate
+    the exact area of the figure (a triangle or a rectangle).
+    '''
+    print("Innnnnnn ")
+    sum_up = 0.0
+    sum_down = 0.0
+    data = x[mfx == mfx.max()]
+    print(data)
+    for d in data:
+        sum_up += d * mfx[x[mfx == mfx.max()]]
+        sum_down += mfx[x[mfx == mfx.max()]]
+
+    return sum_up / sum_down
+
+
 def centroid(x, mfx):
     """
     Defuzzification using centroid (`center of gravity`) method.
@@ -62,7 +99,7 @@ def centroid(x, mfx):
     As we suppose linearity between each pair of points of x, we can calculate
     the exact area of the figure (a triangle or a rectangle).
     '''
-
+    print("innnnnn")
     sum_moment_area = 0.0
     sum_area = 0.0
 
@@ -230,6 +267,7 @@ def defuzz(x, mfx, mode):
         * 'mom'     : mean of maximum
         * 'som'     : min of maximum
         * 'lom'     : max of maximum
+        * 'wam'     : wi
 
     Returns
     -------
@@ -271,6 +309,9 @@ def defuzz(x, mfx, mode):
 
     elif 'lom' in mode:
         return np.max(x[mfx == mfx.max()])
+
+    elif 'wam' in mode:
+        return wam(x, mfx)
 
     else:
         raise ValueError("The input for `mode`, {}, was incorrect."

@@ -82,6 +82,7 @@ class Consequent(FuzzyVariable):
     output = StatefulProperty(None)
 
     def __init__(self, universe, label, defuzzify_method='centroid'):
+        print("Hello it is normal")
         """""" + Consequent.__doc__
         super(Consequent, self).__init__(universe, label, defuzzify_method)
         self.__name__ = 'Consequent'
