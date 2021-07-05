@@ -1,12 +1,12 @@
 import numpy as np
 from numpy.testing import assert_allclose
 from skfuzzy.membership import (gaussmf, gauss2mf, gbellmf, piecemf, pimf,
-                                psigmf, sigmf, smf, trapmf, trimf, zmf)
+                                psigmf, sigmf, smf, trapmf, trimf, zmf, Polynomial)
 
 
 def test_gaussmf():
     x = np.arange(-4, 5.1, 0.1)
-    expected = np.exp(- (x - 1.33)**2 / (2 * 0.45**2))
+    expected = np.exp(- (x - 1.33) ** 2 / (2 * 0.45 ** 2))
     test = gaussmf(x, 1.33, 0.45)
     assert_allclose(test, expected)
 
@@ -14,8 +14,8 @@ def test_gaussmf():
 def test_gauss2mf():
     x = np.arange(-4, 5.1, 0.1)
     expected = np.ones_like(x)
-    expected[x < 1.2] = np.exp(- (x[x < 1.2] - 1.2)**2 / (2 * 0.45**2))
-    expected[x > 3.1] = np.exp(- (x[x > 3.1] - 3.1)**2 / (2 * 0.9**2))
+    expected[x < 1.2] = np.exp(- (x[x < 1.2] - 1.2) ** 2 / (2 * 0.45 ** 2))
+    expected[x > 3.1] = np.exp(- (x[x > 3.1] - 3.1) ** 2 / (2 * 0.9 ** 2))
     test = gauss2mf(x, 1.2, 0.45, 3.1, 0.9)
     assert_allclose(test, expected)
 
@@ -30,9 +30,9 @@ def test_gbellmf():
 
 def test_piecemf():
     x = np.arange(0, 2.1, 0.1)
-    expected = np.r_[0.,    0.,   0.,  0.,   0.,  0.,   0.,  0.,   0.,
-                     0.,    0., 0.25, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85,
-                     0.9, 0.95,   1.]
+    expected = np.r_[0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                     0., 0., 0.25, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85,
+                     0.9, 0.95, 1.]
     test = piecemf(x, [1, 1.25, 2])
     assert_allclose(test, expected)
 

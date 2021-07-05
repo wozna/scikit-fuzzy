@@ -646,17 +646,18 @@ class CrispValueCalculator(object):
             globalWeight = 0
             for _, term in self.var.terms.items():
                 cut = term.membership_value[self.sim]
-                if (cut > 0):
+                if cut > 0:
                     output = term.mf.evaluate(self.sim._get_inputs())
                     globalOutput += output * cut
                     globalWeight += cut
             if globalWeight > 0:
-                [min, max] = self.var.universe
+                domain_min = self.var.universe[0]
+                domain_max = max(self.var.universe)
                 pred = globalOutput / globalWeight
-                if pred < min:
-                    pred = min
-                if pred > max:
-                    pred = max
+                if pred < domain_min:
+                    pred = domain_min
+                if pred > domain_max:
+                    pred = domain_max
                 return pred
             else:
                 raise ValueError("Crisp output cannot be calculated, likely "

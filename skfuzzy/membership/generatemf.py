@@ -513,9 +513,10 @@ class Polynomial:
             if name in self.expression:
                 for (coef, exp) in self.expression[name]:
                     output += coef * value ** exp
-
-        if output > self.domain[1]:
-            output = self.domain[1]
-        if output < self.domain[0]:
-            output = self.domain[0]
+        domain_max = max(self.domain)
+        domain_min = self.domain[0]
+        if output > domain_max:
+            output = domain_max
+        if output < domain_min:
+            output = domain_min
         return output

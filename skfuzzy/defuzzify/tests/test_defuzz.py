@@ -1,3 +1,4 @@
+
 import numpy as np
 import skfuzzy as fuzz
 from numpy.testing import assert_allclose, assert_raises
