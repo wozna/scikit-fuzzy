@@ -62,7 +62,6 @@ def wam(x, mfx):
     As we suppose linearity between each pair of points of x, we can calculate
     the exact area of the figure (a triangle or a rectangle).
     '''
-    print("Innnnnnn ")
     sum_up = 0.0
     sum_down = 0.0
     data = x[mfx == mfx.max()]
@@ -99,7 +98,6 @@ def centroid(x, mfx):
     As we suppose linearity between each pair of points of x, we can calculate
     the exact area of the figure (a triangle or a rectangle).
     '''
-    print("innnnnn")
     sum_moment_area = 0.0
     sum_area = 0.0
 
