@@ -573,10 +573,12 @@ class ControlSystemSimulation(object):
             print("")
 
     def get_mamdani_result(self, value):
-        result = CrispValueCalculator(self.ctrl.consequents[0], self).fuzz_consequent(value)
-        if result is None:
-            print("Can't get good label")
-        return result
+        for c in self.ctrl.consequents:
+            result = CrispValueCalculator(c, self).fuzz_consequent(value)
+            if result is None:
+                print("Can't get good label")
+            return result
+        return None
 
 
 class CrispValueCalculator(object):
